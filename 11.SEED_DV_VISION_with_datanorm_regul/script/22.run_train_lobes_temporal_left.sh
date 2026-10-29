@@ -1,0 +1,11 @@
+python 1.eeg2feat.py --train_path "../../../../dataset/Preprocessed_SingleShot/segment_notch_50Hz_bandpassfilter_0_5_NoneHz_len_2s_overlap_0s_downsampling_200/eeg/train/" \
+    --val_path "../../../../dataset/Preprocessed_SingleShot/segment_notch_50Hz_bandpassfilter_0_5_NoneHz_len_2s_overlap_0s_downsampling_200/eeg/val/" \
+    --test_path "../../../../dataset/Preprocessed_SingleShot/segment_notch_50Hz_bandpassfilter_0_5_NoneHz_len_2s_overlap_0s_downsampling_200/eeg/test/" \
+    --exp_type lobes_temporal_left \
+    --eeg_timesteps 400 \
+    --num_classes 13 \
+    --batch_size 256 \
+    --feat_dims 1024 \
+    --epochs 300 \
+    --val_freq 1 \
+    --num_workers 8

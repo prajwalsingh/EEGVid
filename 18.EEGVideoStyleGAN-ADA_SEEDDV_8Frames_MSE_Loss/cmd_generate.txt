@@ -1,0 +1,1 @@
+python generate.py --network out/00004-seed_dv-cond-cifar-ada-bgcfnc/network-snapshot-000440.pkl --outdir generated_videos/ --seeds 0 --data='../dataset/SEED_DV_EEG_Features_sub1/test'

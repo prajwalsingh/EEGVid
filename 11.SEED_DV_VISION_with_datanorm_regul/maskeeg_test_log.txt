@@ -1,0 +1,21 @@
+
+==================================================
+[subject: sub1]Time mask start: 0, end: 100
+Average k-fold test k-means acc: 0.14214285714285715
+Average k-fold test linear acc: 0.03571428571428571
+==================================================
+==================================================
+[subject: sub1]Time mask start: 100, end: 200
+Average k-fold test k-means acc: 0.1457142857142857
+Average k-fold test linear acc: 0.04071428571428572
+==================================================
+==================================================
+[subject: sub1]Time mask start: 200, end: 300
+Average k-fold test k-means acc: 0.14142857142857143
+Average k-fold test linear acc: 0.03428571428571429
+==================================================
+==================================================
+[subject: sub1]Time mask start: 300, end: 400
+Average k-fold test k-means acc: 0.14357142857142854
+Average k-fold test linear acc: 0.04214285714285714
+==================================================

@@ -1,0 +1,1 @@
+Exp Type: lobes_temporal, Sub: sub1, Average k-fold accuracy: 0.29000000000000004, with data_aug: ['timerev', 'timemask']

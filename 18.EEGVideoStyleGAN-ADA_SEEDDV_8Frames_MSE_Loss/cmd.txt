@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python train.py --outdir=./out/ --data='../dataset/SEED_DV_EEG_Features_sub1/train' --cond=1 --gpus=1 --cfg=cifar --augpipe=bgcfnc --aug=ada

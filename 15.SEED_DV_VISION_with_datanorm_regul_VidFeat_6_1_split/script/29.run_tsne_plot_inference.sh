@@ -1,0 +1,13 @@
+python 5.tsne_eeg2feat.py --eeg_path "../../../../dataset/SEED-DV/EEG/" \
+    --exp_type all \
+    --subject "sub1" \
+    --data_aug 'timerev' 'timemask'\
+    --ckpt_path "EXPERIMENT_EEG2FeatSEED_DV_all_1/sub_1/kfold_5/bestckpt/eegfeat_all.pth"\
+    --save_path "EXPERIMENT_EEG2FeatSEED_DV_all_1/tsne_plot/" \
+    --num_classes 40 \
+    --eeg_timesteps 400 \
+    --batch_size 256 \
+    --feat_dims 1024 \
+    --epochs 300 \
+    --val_freq 1 \
+    --num_workers 8

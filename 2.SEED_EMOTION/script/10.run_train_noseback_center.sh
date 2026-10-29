@@ -1,0 +1,11 @@
+python 1.eeg2feat.py --train_path "../../../../dataset/SEED/data/eeg_video_dataset_random_split_v2_tokens/repeat_*/train/" \
+    --val_path "../../../../dataset/SEED/data/eeg_video_dataset_random_split_v2_tokens/repeat_*/val/" \
+    --test_path "../../../../dataset/SEED/data/eeg_video_dataset_random_split_v2_tokens/repeat_*/test/" \
+    --exp_type noseback_center \
+    --eeg_timesteps 400 \
+    --num_classes 3 \
+    --batch_size 256 \
+    --feat_dims 1024 \
+    --epochs 300 \
+    --val_freq 1 \
+    --num_workers 8

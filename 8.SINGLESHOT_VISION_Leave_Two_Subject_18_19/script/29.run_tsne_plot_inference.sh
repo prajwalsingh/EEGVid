@@ -1,0 +1,11 @@
+python 5.tsne_eeg2feat.py --test_path "../../../../dataset/Preprocessed_SingleShot/segment_notch_50Hz_bandpassfilter_0_5_NoneHz_len_2s_overlap_0s_downsampling_200/eeg_leave_two_18_19/test/" \
+    --exp_type all \
+    --ckpt_path "EXPERIMENT_EEG2FeatAbl_all_1/bestckpt/eegfeat_all_0.5836814257866889.pth"\
+    --save_path "EXPERIMENT_EEG2FeatAbl_all_1/tsne_plot/" \
+    --vid_labels 13 \
+    --eeg_timesteps 400 \
+    --batch_size 256 \
+    --feat_dims 1024 \
+    --epochs 300 \
+    --val_freq 1 \
+    --num_workers 8

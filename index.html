@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyond Reconstruction: What EEG-to-Video Decoding Actually Recovers</title>
+<meta name="description" content="EEGVid: EEG-conditioned video generation with controlled diagnostics that separate stimulus-level information from trial-specific decoding.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --ink:#1d2433;
+    --ink-2:#4a5468;
+    --ink-3:#7a8497;
+    --line:#e7eaf0;
+    --soft:#f5f7fb;
+    --accent:#4c5fd5;
+    --accent-soft:#eef0fd;
+    --warm:#e9785b;
+    --warm-soft:#fdf0ec;
+    --ok:#2f9e7a;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;display:block}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:var(--soft);border:1px solid var(--line);padding:1px 6px;border-radius:6px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:6px;height:56px;overflow-x:auto;scrollbar-width:none}
+  nav .wrap::-webkit-scrollbar{display:none}
+  nav .brand{font-weight:900;letter-spacing:-.01em;margin-right:14px;white-space:nowrap;color:var(--ink)}
+  nav .brand span{color:var(--accent)}
+  nav a.nl{color:var(--ink-2);font-weight:700;font-size:.92rem;padding:6px 12px;border-radius:999px;white-space:nowrap}
+  nav a.nl:hover{background:var(--soft);text-decoration:none}
+  nav a.nl.active{background:var(--accent-soft);color:var(--accent)}
+
+  /* hero */
+  header.hero{padding:72px 0 36px;text-align:center}
+  .eyebrow{display:inline-block;font-weight:800;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:6px 14px;border-radius:999px}
+  h1{font-size:clamp(2rem,4.6vw,3.25rem);line-height:1.12;font-weight:900;letter-spacing:-.025em;margin:18px auto 14px;max-width:880px}
+  .lede{font-size:1.15rem;color:var(--ink-2);max-width:720px;margin:0 auto}
+  .authors{margin-top:18px;color:var(--ink-3);font-weight:600}
+  .btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:.95rem;padding:10px 18px;border-radius:999px;border:1.5px solid var(--line);color:var(--ink);background:#fff;transition:all .15s}
+  .btn:hover{border-color:var(--accent);color:var(--accent);text-decoration:none;transform:translateY(-1px)}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn svg{width:16px;height:16px}
+
+  /* sections */
+  section{padding:56px 0;border-top:1px solid var(--line)}
+  section:first-of-type{border-top:none}
+  h2{font-size:clamp(1.55rem,3vw,2rem);font-weight:900;letter-spacing:-.02em;margin:0 0 6px}
+  .sub{color:var(--ink-2);margin:0 0 28px;max-width:760px}
+  h3{font-size:1.15rem;font-weight:800;margin:0 0 6px}
+  p{margin:0 0 14px}
+  .muted{color:var(--ink-3)}
+  .small{font-size:.9rem}
+
+  figure{margin:0}
+  figure.card{border:1px solid var(--line);border-radius:var(--radius);padding:16px;background:#fff;box-shadow:var(--shadow)}
+  figcaption{color:var(--ink-2);font-size:.95rem;margin-top:12px}
+  figcaption b{color:var(--ink)}
+  .zoomable{cursor:zoom-in;border-radius:10px}
+
+  /* key findings */
+  .kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
+  .kcard{border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:#fff;text-align:left;transition:transform .15s, box-shadow .15s}
+  .kcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .knum{font-size:2rem;font-weight:900;letter-spacing:-.02em;line-height:1.1}
+  .knum.a{color:var(--accent)} .knum.w{color:var(--warm)} .knum.g{color:var(--ok)}
+  .klab{font-weight:800;margin-top:6px;font-size:.95rem}
+  .kdesc{color:var(--ink-3);font-size:.86rem;line-height:1.45;margin-top:4px}
+
+  /* abstract */
+  .abstract{font-size:1.04rem;color:var(--ink-2);column-gap:40px}
+  .tldr{border-left:4px solid var(--accent);background:var(--accent-soft);padding:14px 18px;border-radius:0 12px 12px 0;color:var(--ink);font-weight:600;margin-bottom:22px}
+
+  /* accordion */
+  details.rq{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:#fff;transition:box-shadow .15s}
+  details.rq[open]{box-shadow:var(--shadow)}
+  details.rq summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:center;gap:14px;font-weight:800}
+  details.rq summary::-webkit-details-marker{display:none}
+  .rqtag{flex:none;font-size:.78rem;font-weight:900;color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:4px 8px}
+  .chev{margin-left:auto;transition:transform .2s;color:var(--ink-3)}
+  details[open] .chev{transform:rotate(180deg)}
+  details.rq .body{padding:0 18px 16px 70px;color:var(--ink-2)}
+
+  /* tabs */
+  .tabs{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:999px;margin-bottom:20px}
+  .tab{appearance:none;border:none;background:transparent;font:inherit;font-weight:800;font-size:.92rem;color:var(--ink-2);padding:8px 16px;border-radius:999px;cursor:pointer;transition:all .15s}
+  .tab:hover{color:var(--ink)}
+  .tab.on{background:#fff;color:var(--accent);box-shadow:0 1px 3px rgba(20,30,60,.12)}
+  .seg{display:inline-flex;gap:4px;padding:3px;background:var(--soft);border:1px solid var(--line);border-radius:10px}
+  .seg button{appearance:none;border:none;background:transparent;font:inherit;font-weight:700;font-size:.85rem;color:var(--ink-2);padding:6px 12px;border-radius:8px;cursor:pointer}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,30,60,.12)}
+
+  /* gallery */
+  .gal-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .pair{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;transition:box-shadow .15s, transform .15s}
+  .pair:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+  .pair .imgs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .pair.overlay .imgs{grid-template-columns:1fr;position:relative}
+  .pair img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;background:var(--soft);cursor:zoom-in}
+  .pair .lbls{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;font-size:.78rem;font-weight:800;text-align:center}
+  .pair .lbls span:first-child{color:var(--ink-3)} .pair .lbls span:last-child{color:var(--accent)}
+  .pair.overlay .wipe{position:relative}
+  .pair.overlay .wipe img.top{position:absolute;inset:0;clip-path:inset(0 0 0 var(--cut,50%))}
+  .pair.overlay .wipe input{position:absolute;left:0;right:0;bottom:8px;width:84%;margin:0 auto;accent-color:var(--accent)}
+  .pair.overlay .wipe .line{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);pointer-events:none}
+  .note{display:flex;gap:10px;align-items:flex-start;background:var(--warm-soft);border:1px solid #f6d8cf;color:#7a3b2a;padding:12px 14px;border-radius:12px;font-size:.92rem;margin-top:18px}
+
+  /* explorer */
+  .two{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:start}
+  .panel{border:1px solid var(--line);border-radius:var(--radius);padding:20px;background:#fff;box-shadow:var(--shadow)}
+  .ctrls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+  .ctrls .lab{font-size:.8rem;font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+  .bars{display:flex;flex-direction:column;gap:10px}
+  .brow{display:grid;grid-template-columns:120px 1fr 64px;gap:10px;align-items:center;font-size:.92rem}
+  .brow .nm{font-weight:700;color:var(--ink-2)}
+  .track{height:14px;background:var(--soft);border-radius:999px;position:relative;overflow:hidden}
+  .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--accent);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+  .fill.alt{background:var(--warm)}
+  .chance{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.35}
+  .brow .v{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+  .grp{font-size:.78rem;font-weight:900;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 2px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--ink-2);margin-top:14px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+  .callout{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.92rem;color:var(--ink-2);margin-top:14px}
+  .callout b{color:var(--ink)}
+
+  /* diagnostics */
+  .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+  .dcard{border:1.5px solid var(--line);border-radius:var(--radius);padding:16px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:all .15s}
+  .dcard:hover{border-color:#c9cff5}
+  .dcard.on{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .dnum{font-size:.78rem;font-weight:900;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+  .dq{font-weight:800;margin:4px 0}
+  .dv{font-size:.88rem;color:var(--ink-3);line-height:1.45}
+  .dpane{display:none}
+  .dpane.on{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .gchart{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:end;height:240px;padding:10px 6px 0;border-bottom:1.5px solid var(--line);position:relative}
+  .gcol{display:flex;gap:6px;align-items:flex-end;justify-content:center;height:100%;position:relative}
+  .gbar{width:38%;max-width:44px;border-radius:8px 8px 3px 3px;background:var(--accent);position:relative;transition:height .6s cubic-bezier(.2,.8,.2,1)}
+  .gbar.r{background:#c7ccd8}
+  .gbar span{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:.75rem;font-weight:800;white-space:nowrap}
+  .gx{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center;font-size:.82rem;font-weight:700;color:var(--ink-3);margin-top:8px}
+  .gap-tag{font-size:.75rem;font-weight:900;color:var(--ok);display:block}
+  .stack{display:flex;height:34px;border-radius:10px;overflow:hidden;background:var(--soft)}
+  .stack div{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.82rem;transition:flex-grow .6s cubic-bezier(.2,.8,.2,1);white-space:nowrap;overflow:hidden}
+  .s-d{background:var(--accent)} .s-o{background:var(--warm)} .s-n{background:#b8bfcd}
+  .srow{margin-bottom:16px}
+  .srow .t{display:flex;justify-content:space-between;font-weight:800;font-size:.92rem;margin-bottom:6px}
+  table.mt{width:100%;border-collapse:collapse;font-size:.95rem}
+  table.mt th,table.mt td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center;font-variant-numeric:tabular-nums}
+  table.mt th{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:800}
+  table.mt td:first-child,table.mt th:first-child{text-align:left;font-weight:800}
+  table.mt tr.hl td{background:var(--accent-soft)}
+  .best{color:var(--ok);font-weight:900}
+  .scroll-x{overflow-x:auto}
+
+  /* method */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+  .step{border:1px solid var(--line);border-radius:14px;padding:16px}
+  .step .n{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+  .step p{color:var(--ink-2);font-size:.94rem;margin:0}
+
+  /* datasets */
+  .dsgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .ds{border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .ds .tagrow{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .chip{font-size:.78rem;font-weight:800;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink-2)}
+  .ds p{color:var(--ink-2);font-size:.93rem;margin:0}
+  details.pp{border:1px solid var(--line);border-radius:14px;margin-top:12px;background:#fff}
+  details.pp summary{cursor:pointer;padding:14px 18px;font-weight:800;list-style:none;display:flex;align-items:center}
+  details.pp summary::-webkit-details-marker{display:none}
+  details.pp .body{padding:0 18px 14px}
+  details.pp ol{margin:0;padding-left:20px;color:var(--ink-2)}
+  details.pp li{margin:4px 0}
+
+  /* refs */
+  ol.refs{padding-left:22px;color:var(--ink-2);font-size:.92rem}
+  ol.refs li{margin:6px 0}
+
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--ink-3);text-align:center;font-size:.9rem}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(15,20,35,.82);display:none;align-items:center;justify-content:center;z-index:100;padding:24px;cursor:zoom-out}
+  .lb.on{display:flex;animation:fade .2s ease}
+  .lb img{max-width:min(1100px,96vw);max-height:88vh;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .lb .cap{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:.95rem;padding:0 20px}
+
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease, transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media (max-width:900px){
+    .kgrid{grid-template-columns:repeat(2,1fr)}
+    .two{grid-template-columns:1fr}
+    .dgrid,.steps,.dsgrid{grid-template-columns:1fr}
+  }
+  @media (max-width:520px){
+    body{font-size:16px}
+    header.hero{padding:48px 0 24px}
+    .brow{grid-template-columns:92px 1fr 54px}
+    .gchart{height:200px;gap:8px}
+    .gx{gap:8px}
+    details.rq .body{padding-left:18px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">EEG<span>Vid</span></a>
+    <a class="nl" href="#abstract">Abstract</a>
+    <a class="nl" href="#method">Method</a>
+    <a class="nl" href="#results">Results</a>
+    <a class="nl" href="#encoding">What EEG encodes</a>
+    <a class="nl" href="#diagnostics">Diagnostics</a>
+    <a class="nl" href="#data">Datasets</a>
+    <a class="nl" href="#refs">References</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="eyebrow">EEG &rarr; Video &middot; Controlled evaluation</span>
+    <h1>Beyond Reconstruction: What EEG-to-Video Decoding Actually Recovers</h1>
+    <p class="lede">We generate short videos from EEG alone and introduce controlled diagnostics that reveal what EEG-conditioned generation recovers: stimulus-level information that the generator uses as a content selector.</p>
+    <!-- <p class="authors">Author One<sup>1</sup>, Author Two<sup>1</sup>, Author Three<sup>1</sup> &middot; <sup>1</sup>Affiliation</p> -->
+    <div class="btns">
+      <a class="btn primary" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper</a>
+      <a class="btn" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Supplementary</a>
+      <a class="btn" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>Code</a>
+      <a class="btn" href="#data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>Data</a>
+    </div>
+
+    <figure class="card reveal" style="margin-top:40px">
+      <img class="zoomable" src="images/teaser_result_page-0001.jpg" alt="Ground-truth and generated frames for the SEED, EEG-Video Action and SEED-DV datasets" data-cap="Generated video frames from EEG on SEED, EEG-Video Action and SEED-DV.">
+      <figcaption><b>Generated video frames from EEG.</b> Ground-truth and generated frames for clips shown to participants in SEED [1,2], EEG-Video Action [4] and SEED-DV [8]. Each clip has eight frames. The EEG provides semantic guidance, and the dataset-specific GAN prior provides fine spatial detail.</figcaption>
+    </figure>
+
+    <div class="kgrid">
+      <div class="kcard reveal"><div class="knum a">72.1%</div><div class="klab">13-way video decoding</div><div class="kdesc">EEG-Video Action, all subjects (chance 7.7%).</div></div>
+      <div class="kcard reveal"><div class="knum g">82.3%</div><div class="klab">Follows swapped EEG</div><div class="kdesc">Outputs shift to the donor's class when EEG is swapped.</div></div>
+      <div class="kcard reveal"><div class="knum a">4 / 4</div><div class="klab">Above chance on unseen videos</div><div class="kdesc">All four held-out splits, every seed, over a random encoder (k-means).</div></div>
+      <div class="kcard reveal"><div class="knum w" style="font-size:1.6rem">0.62 vs 0.43</div><div class="klab">Class-label reference</div><div class="kdesc">SSIM of a one-hot label generator vs. the EEG generator.</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="abstract">
+  <div class="wrap reveal">
+    <h2>Abstract</h2>
+    <div class="tldr">TL;DR &mdash; Reconstruction scores alone cannot separate trial-specific decoding from a strong generative prior. Our diagnostics show that EEG drives the stimulus-level content of the generated video.</div>
+    <p class="abstract">Reconstructing <em>dynamic visual stimuli</em> from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder generalizes above chance to unseen video classes, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, although follow-up experiments show that it also provides a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, trial-specific decoding.</p>
+
+    <h3 style="margin-top:34px;margin-bottom:14px">Research questions</h3>
+    <details class="rq" open>
+      <summary><span class="rqtag">RQ1</span>How are visual and emotional features related?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body">In the SEED dataset, emotions are induced through video content. We test whether visual features also carry affective information. Our results show that emotional information is largely content-driven, with visual representations retaining enough affective structure for clustering.</div>
+    </details>
+    <details class="rq">
+      <summary><span class="rqtag">RQ2</span>Do visual or emotional features retain subject-specific information?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body">While untrained features cluster by subject, learned features emphasize stimulus information and reduce subject-related bias.</div>
+    </details>
+    <details class="rq">
+      <summary><span class="rqtag">RQ3</span>How do different brain regions contribute to encoding?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body">We find that the temporal lobe is the most informative across tasks, the left hemisphere dominates for video classification and the right hemisphere for emotion, and, when training and test subjects overlap, frontal channels outperform posterior channels in both tasks.</div>
+    </details>
+    <details class="rq">
+      <summary><span class="rqtag">RQ4</span>Can dynamic videos be reconstructed from EEG, and how much of this reconstruction reflects genuine trial-specific decoding?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body">By conditioning a GAN on EEG features and temporal indices, we show that generated frames align semantically with the videos participants observed. We then introduce three controlled diagnostics: a held-out-stimulus generalization test for the encoder, a mismatched-conditioning control for the generator, and a class-conditional baseline that compares EEG with a ground-truth label. These tests determine how much of the observed alignment survives rigorous evaluation and reveal where the pipeline's apparent success is limited.</div>
+    </details>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap reveal">
+    <h2>Method</h2>
+    <p class="sub">A triplet-trained EEG encoder feeds a StyleGAN-ADA generator. A positional encoding of the frame index turns an image generator into a video generator.</p>
+    <figure class="card">
+      <img class="zoomable" src="images/framework_eegvideo.png" alt="EEGVid framework: EEG encoder and conditional StyleGAN-ADA generator" style="max-width:640px;margin:0 auto" data-cap="EEGVid framework.">
+      <figcaption><b>Framework.</b> (a) A modified NICE EEG encoder [6] maps a 2-second EEG segment to a 1024-d unit-normalized feature. (b) A StyleGAN-ADA generator [7], trained from scratch with an added L1 loss to the ground-truth frame, synthesizes each frame from this feature concatenated with a sinusoidal encoding of the frame index (21-d for SEED and SEED-DV, 5-d for EEG-Video Action).</figcaption>
+    </figure>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Learn from EEG only</h3><p>Triplet loss pulls together EEG segments from the same video and pushes apart different videos. No image or text model shapes the representation.</p></div>
+      <div class="step"><div class="n">2</div><h3>Condition on time</h3><p>The frame index is encoded and appended to the EEG feature. Without it, frames are almost static: optical-flow score 0.276 vs 0.896 with it, and 0.479 for real video, on EEG-Video Action. The motion comes from the frame index, not from the EEG.</p></div>
+      <div class="step"><div class="n">3</div><h3>Probe, don't just score</h3><p>The generator is a probe. Controlled interventions test what the EEG actually contributes beyond the generator's prior.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap reveal">
+    <h2>Qualitative results</h2>
+    <p class="sub">Ground-truth clips next to clips generated from EEG. Each clip has eight frames. Switch datasets, compare side by side or with a slider, and click any clip to enlarge it.</p>
+    <div class="gal-tools">
+      <div class="tabs" role="tablist" id="galTabs">
+        <button class="tab on" data-ds="seed">SEED</button>
+        <button class="tab" data-ds="action">EEG-Video Action</button>
+        <button class="tab" data-ds="seeddv">SEED-DV</button>
+      </div>
+      <div class="seg" id="galMode">
+        <button class="on" data-mode="side">Side by side</button>
+        <button data-mode="overlay">Slider</button>
+      </div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <div class="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><div>Test clips are held-out 2-second segments of the videos in each dataset (random 80/10/10 split).</div></div>
+
+    <div class="scroll-x" style="margin-top:28px">
+      <table class="mt">
+        <thead><tr><th>Dataset</th><th>PSNR &uarr;</th><th>SSIM &uarr;</th><th>LPIPS &darr;</th><th>CLIP-Sim &uarr;</th></tr></thead>
+        <tbody>
+          <tr><td>SEED</td><td>10.80</td><td>0.153</td><td>0.587</td><td>0.679</td></tr>
+          <tr><td>EEG-Video Action</td><td>16.22</td><td>0.431</td><td>0.418</td><td>0.772</td></tr>
+          <tr><td>SEED-DV</td><td>9.62</td><td>0.143</td><td>0.690</td><td>0.558</td></tr>
+          <tr><td class="muted">SEED-DV &middot; EEG2Video [8] (reported)</td><td>&ndash;</td><td>0.256</td><td>&ndash;</td><td>&ndash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="encoding">
+  <div class="wrap reveal">
+    <h2>What does EEG encode?</h2>
+    <p class="sub">We train the encoder on channels from one brain region at a time, and mask time windows at inference. Explore the results by task, dataset and evaluation regime.</p>
+
+    <div class="two">
+      <div class="panel">
+        <div class="ctrls">
+          <div class="tabs" id="exTask" style="margin:0">
+            <button class="tab on" data-k="seed_vid">SEED &middot; video</button>
+            <button class="tab" data-k="act_vid">Action &middot; video</button>
+            <button class="tab" data-k="seed_emo">SEED &middot; emotion</button>
+          </div>
+        </div>
+        <div class="ctrls">
+          <span class="lab">Regime</span>
+          <div class="seg" id="exReg">
+            <button class="on" data-r="all">All subjects</button>
+            <button data-r="l2s">Leave two subjects</button>
+          </div>
+        </div>
+        <div class="bars" id="exBars"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Accuracy</span><span><i style="background:var(--warm)"></i>Masked time window</span><span><i style="background:var(--ink);opacity:.35;width:3px"></i>Chance</span></div>
+        <div class="callout" id="exNote"></div>
+      </div>
+
+      <div>
+        <div class="tabs" id="figTabs">
+          <button class="tab on" data-f="0">Triplet loss</button>
+          <button class="tab" data-f="1">Emotion &amp; video</button>
+          <button class="tab" data-f="2">Lobes</button>
+          <button class="tab" data-f="3">Action</button>
+          <button class="tab" data-f="4">SEED-DV</button>
+        </div>
+        <figure class="card" id="figBox">
+          <img class="zoomable" id="figImg" src="images/eegvideo_tripletloss.png" alt="">
+          <figcaption id="figCap"></figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="diagnostics">
+  <div class="wrap reveal">
+    <h2>Controlled diagnostics</h2>
+    <p class="sub">Reconstruction scores alone cannot separate trial-specific decoding from a strong generative prior. One sanity check and three controls on EEG-Video Action show what the generator takes from the EEG.</p>
+
+    <div class="two" style="margin-bottom:22px;align-items:center">
+      <figure class="card" id="randFig">
+        <img class="zoomable" src="images/eegfeat_vs_randomfeat.png" alt="Frames generated from random vectors versus learned EEG embeddings" data-cap="Random conditioning vs EEG conditioning." onerror="this.closest('figure').style.display='none'">
+      </figure>
+      <div>
+        <div class="dnum">Sanity check</div>
+        <h3>Does the generator need EEG at all?</h3>
+        <p class="muted">We replace the learned EEG embeddings with random vectors from N(0, I) and keep everything else fixed. Random conditioning gives frames without class-consistent content. EEG conditioning gives consistent, stimulus-aligned content.</p>
+        <p class="muted">The generator relies on structured EEG input. Control 2 further tests whether it follows the specific trial encoded in the EEG.</p>
+      </div>
+    </div>
+
+    <div class="dgrid">
+      <button class="dcard on" data-p="d1"><div class="dnum">Control 1</div><div class="dq">Does the encoder generalize to unseen videos?</div><div class="dv">Yes, above chance on all four held-out splits.</div></button>
+      <button class="dcard" data-p="d2"><div class="dnum">Control 2</div><div class="dq">Does the generator follow the EEG?</div><div class="dv">Yes. Swapped EEG moves output to the donor's class.</div></button>
+      <button class="dcard" data-p="d3"><div class="dnum">Control 3</div><div class="dq">How does EEG compare to a class label?</div><div class="dv">The label sets a class-level reference for EEG.</div></button>
+    </div>
+
+    <div class="panel">
+      <div class="dpane on" id="d1">
+        <h3>Held-out-stimulus generalization</h3>
+        <p class="muted small">The encoder is retrained four times, each time with a different set of videos held out of training. We compare it with a randomly initialized encoder on the held-out videos only.</p>
+        <div class="ctrls">
+          <span class="lab">Metric</span>
+          <div class="seg" id="hoMetric">
+            <button class="on" data-m="km">k-means</button>
+            <button data-m="ap">All-pairs retrieval</button>
+            <button data-m="cs">Cross-subject retrieval</button>
+          </div>
+        </div>
+        <div class="gchart" id="hoChart"></div>
+        <div class="gx" id="hoX"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Trained encoder</span><span><i style="background:#c7ccd8"></i>Random encoder</span></div>
+        <div class="callout" id="hoNote"></div>
+      </div>
+
+      <div class="dpane" id="d2">
+        <h3>Mismatched-conditioning control</h3>
+        <p class="muted small">Each test segment's conditioning is replaced with that of a different (donor) trial at the same frame position. We then ask which class the output looks like, using the nearest CLIP class prototype.</p>
+        <div class="srow"><div class="t"><span>EEG swapped</span><span class="muted">PSNR 16.22 &rarr; 10.34</span></div>
+          <div class="stack"><div class="s-d" style="flex-grow:82.3">Donor 82.3%</div><div class="s-o" style="flex-grow:1.4"></div><div class="s-n" style="flex-grow:16.4">Neither 16.4%</div></div></div>
+        <div class="srow"><div class="t"><span>Label swapped (class-label model)</span><span class="muted">PSNR 17.13 &rarr; 10.12</span></div>
+          <div class="stack"><div class="s-d" style="flex-grow:94.3">Donor 94.3%</div><div class="s-o" style="flex-grow:0.4"></div><div class="s-n" style="flex-grow:5.3">5.3%</div></div></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Looks like donor class</span><span><i style="background:var(--warm)"></i>Looks like original class (1.4% / 0.4%)</span><span><i style="background:#b8bfcd"></i>Neither</span></div>
+        <div class="callout"><b>Reading.</b> The generator uses EEG as a content selector: CLIP similarity to the donor prototype (0.893) exceeds similarity to the original (0.754). The output follows the stimulus class carried by the EEG.</div>
+      </div>
+
+      <div class="dpane" id="d3">
+        <h3>Class-conditional baseline</h3>
+        <p class="muted small">An identical generator is trained with a one-hot trial label in place of the EEG feature and evaluated on the same 30,096 test segments.</p>
+        <div class="scroll-x">
+          <table class="mt">
+            <thead><tr><th>Conditioning</th><th>PSNR &uarr;</th><th>SSIM &uarr;</th><th>LPIPS &darr;</th><th>CLIP-Sim &uarr;</th></tr></thead>
+            <tbody>
+              <tr><td>EEG feature</td><td>16.22</td><td>0.431</td><td>0.418</td><td>0.772</td></tr>
+              <tr class="hl"><td>Ground-truth label</td><td class="best">17.13</td><td class="best">0.620</td><td class="best">0.285</td><td class="best">0.866</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><b>Reading.</b> The label is a cleaner, easier target: it is followed more strictly when swapped (94.3% vs 82.3%). Its outputs are not collapsed (generated vs real diversity 0.258 vs 0.265 LPIPS). The label therefore serves as a class-level reference, and closing the gap calls for encoders that recover segment-level information from EEG.</div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:18px;background:#fff">
+      <b>Bottom line.</b> EEG carries stimulus-level information that the generator uses as a content selector. These controls, rather than reconstruction scores alone, give a more informative basis for evaluating EEG-to-video models. They need no change to the generator and apply to any architecture. Natural next steps are datasets with repeated presentations, within-class swaps, held-out-video generation, and encoders with stronger cross-subject alignment.
+    </div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="wrap reveal">
+    <h2>Datasets</h2>
+    <p class="sub">All EEG is resampled to 200&nbsp;Hz and cut into non-overlapping 2-second segments aligned with the video.</p>
+    <div class="dsgrid">
+      <div class="ds">
+        <h3>SEED</h3>
+        <div class="tagrow"><span class="chip">15 subjects &times; 3 sessions</span><span class="chip">15 clips</span><span class="chip">62 ch</span></div>
+        <p>Emotion dataset [1,2]. Four-minute film clips chosen to induce positive, neutral or negative emotion. Recorded with a 62-channel ESI NeuroScan system [3].</p>
+        <p style="margin-top:10px"><a href="https://bcmi.sjtu.edu.cn/home/seed/seed.html" target="_blank" rel="noopener">Dataset page &rarr;</a></p>
+      </div>
+      <div class="ds">
+        <h3>EEG-Video Action</h3>
+        <div class="tagrow"><span class="chip">19 subjects</span><span class="chip">13 videos</span><span class="chip">64 ch</span></div>
+        <p>Natural single-shot videos [4], shown muted. Recorded with a 64-channel BioSemi ActiveTwo system [5] at 2048&nbsp;Hz. Used for all controlled diagnostics.</p>
+        <p style="margin-top:10px"><a href="https://zenodo.org/records/10512414" target="_blank" rel="noopener">Dataset page &rarr;</a></p>
+      </div>
+      <div class="ds">
+        <h3>SEED-DV</h3>
+        <div class="tagrow"><span class="chip">20 subjects</span><span class="chip">1400 clips</span><span class="chip">40 concepts</span></div>
+        <p>Large-scale EEG-video dataset from EEG2Video [8]. Used here as an analysis benchmark; accuracy is close to chance.</p>
+        <p style="margin-top:10px"><a href="https://bcmi.sjtu.edu.cn/home/eeg2video/" target="_blank" rel="noopener">Dataset page &rarr;</a></p>
+      </div>
+    </div>
+
+    <details class="pp">
+      <summary>Preprocessing: SEED<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body"><ol>
+        <li>Create a directory named <code>dataset</code>, and inside it a directory named <code>SEED</code>.</li>
+        <li>Place the downloaded <code>Preprocessed_EEG</code> directory inside <code>dataset/SEED</code>.</li>
+        <li>Place <code>video_chunks</code> inside <code>dataset/SEED</code>.</li>
+        <li>Set <code>PATH_TO_DATASET</code> in <code>./Preprocessing/0.SEED/splitter_2.py</code>.</li>
+        <li>Run <code>./Preprocessing/0.SEED/splitter_2.py</code>. Segments are written to <code>dataset/SEED/eeg_video_dataset_random_split_v2_tokens</code>.</li>
+      </ol></div>
+    </details>
+    <details class="pp">
+      <summary>Preprocessing: EEG-Video Action<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body"><ol>
+        <li>Create a directory named <code>ACTION</code> inside <code>dataset</code>.</li>
+        <li>Place the downloaded <code>SingleShot</code> directory inside <code>dataset/ACTION</code>.</li>
+        <li>Set <code>path_to_dataset</code> in <code>./Preprocessing/1.ACTION/segment.py</code> and run it. EEG segments are written inside <code>dataset/ACTION/Preprocessed_SingleShot</code>.</li>
+        <li>Place the downloaded videos in <code>dataset/ACTION/SingleShotVideo</code>.</li>
+        <li>Set <code>path_to_dataset</code> in <code>./Preprocessing/1.ACTION/chunck_video.py</code> and run it. Video segments are written to the same directory.</li>
+        <li>EEG and video segments share file names, so they can be paired by name.</li>
+      </ol></div>
+    </details>
+  </div>
+</section>
+
+<section id="refs">
+  <div class="wrap reveal">
+    <h2>References</h2>
+    <ol class="refs">
+      <li>W.-L. Zheng and B.-L. Lu. Investigating critical frequency bands and channels for EEG-based emotion recognition with deep neural networks. <em>IEEE TAMD</em>, 7(3):162&ndash;175, 2015.</li>
+      <li>R.-N. Duan, J.-Y. Zhu and B.-L. Lu. Differential entropy feature for EEG-based emotion classification. <em>IEEE/EMBS NER</em>, 81&ndash;84, 2013.</li>
+      <li>Compumedics NeuroScan. ESI NeuroScan System. <a href="https://www.compumedics.com.au/products/neuroscan/" target="_blank" rel="noopener">compumedics.com.au</a>.</li>
+      <li>Y. Yao, A. Stebner, T. Tuytelaars, S. Geirnaert and A. Bertrand. Identifying temporal correlations between natural single-shot videos and EEG signals. <em>Journal of Neural Engineering</em>, 21(1):016018, 2024.</li>
+      <li>BioSemi. ActiveTwo EEG System. <a href="https://www.biosemi.com" target="_blank" rel="noopener">biosemi.com</a>.</li>
+      <li>Y. Song, B. Liu, X. Li, N. Shi, Y. Wang and X. Gao. Decoding natural images from EEG for object recognition. <em>arXiv:2308.13234</em>, 2023.</li>
+      <li>T. Karras, M. Aittala, J. Hellsten, S. Laine, J. Lehtinen and T. Aila. Training generative adversarial networks with limited data. <em>NeurIPS</em>, 33:12104&ndash;12114, 2020.</li>
+      <li>X.-H. Liu, Y.-K. Liu, Y. Wang, K. Ren, H. Shi, Z. Wang, D. Li, B.-L. Lu and W.-L. Zheng. EEG2Video: Towards decoding dynamic visual perception from EEG signals. <em>NeurIPS</em>, 37:72245&ndash;72273, 2024.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Beyond Reconstruction &middot; EEGVid project page &middot; &copy; 2026</div>
+</footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
+
+<script>
+(function(){
+  // ---------- gallery data (same files as before) ----------
+  const G = {
+    seed:{dir:'images/filter_clips_seed/', ids:['11_2_1_107_vidx_1753','11_9_2_8_vidx_7010','12_5_1_47_vidx_4550','12_6_2_66_vidx_4563','13_12_0_65_vidx_4804','13_12_0_97_vidx_2212','13_8_1_66_vidx_4758','14_10_2_36_vidx_4950','14_11_1_77_vidx_2372','14_15_0_12_vidx_2412','14_15_0_65_vidx_7608','14_1_2_36_vidx_2253','14_3_0_53_vidx_2279','14_4_0_107_vidx_7485','15_10_2_107_vidx_2535','15_10_2_14_vidx_7717','15_12_0_77_vidx_5152','15_2_1_13_vidx_7626','15_2_1_97_vidx_5039','15_3_0_97_vidx_7646','15_8_1_97_vidx_7701']},
+    action:{dir:'images/filter_clip_action/', ids:['0_10_49_vidx_154','0_11_40_vidx_171','0_12_130_vidx_192','0_7_84_vidx_112','1_6_30_vidx_291','1_8_74_vidx_318','2_1_85_vidx_416','2_2_146_vidx_437','2_3_56_vidx_443']},
+    seeddv:{dir:'images/filter_clips_seeddv/', ids:['block_6_clip_143_classlabel_5_subclass_2_vidx_22','block_6_clip_161_classlabel_13_subclass_0_vidx_60','block_6_clip_187_classlabel_11_subclass_1_vidx_51','block_6_clip_198_classlabel_38_subclass_2_vidx_187','block_6_clip_91_classlabel_3_subclass_0_vidx_10','block_6_clip_199_classlabel_38_subclass_3_vidx_188']}
+  };
+  let gDs='seed', gMode='side';
+  const gal=document.getElementById('gallery');
+  function renderGallery(){
+    const d=G[gDs]; gal.innerHTML='';
+    d.ids.forEach(id=>{
+      const gt=d.dir+id+'_gt.gif', pr=d.dir+id+'_pred.gif';
+      const el=document.createElement('div');
+      if(gMode==='side'){
+        el.className='pair';
+        el.innerHTML=`<div class="imgs"><img loading="lazy" src="${gt}" alt="Ground truth" data-cap="Ground truth"><img loading="lazy" src="${pr}" alt="Generated from EEG" data-cap="Generated from EEG"></div><div class="lbls"><span>Ground truth</span><span>From EEG</span></div>`;
+      }else{
+        el.className='pair overlay';
+        el.innerHTML=`<div class="imgs"><div class="wipe"><img loading="lazy" src="${gt}" alt="Ground truth"><img class="top" loading="lazy" src="${pr}" alt="Generated from EEG"><div class="line"></div><input type="range" min="0" max="100" value="50" aria-label="Compare"></div></div><div class="lbls"><span>&larr; Ground truth</span><span>From EEG &rarr;</span></div>`;
+        const w=el.querySelector('.wipe'), r=el.querySelector('input');
+        r.addEventListener('input',()=>w.style.setProperty('--cut',r.value+'%'));
+      }
+      gal.appendChild(el);
+    });
+  }
+  document.querySelectorAll('#galTabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#galTabs .tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');gDs=b.dataset.ds;renderGallery();});
+  document.querySelectorAll('#galMode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#galMode button').forEach(x=>x.classList.remove('on'));b.classList.add('on');gMode=b.dataset.mode;renderGallery();});
+  renderGallery();
+
+  // ---------- region explorer (values from the paper's figures) ----------
+  const EX={
+    seed_vid:{chance:6.67, all:{All:66.84,Left:54.39,Right:28.32,Front:31.21,Back:26.65,t:[54.66,49.40,43.40,60.47]},
+                           l2s:{All:19.09,Left:19.33,Right:16.43,Front:18.09,Back:15.98,t:[17.25,16.25,16.65,17.14]},
+              note:{all:'<b>Left beats right</b> (54.4% vs 28.3%), and front beats back. Masking timesteps 100&ndash;300 (about 0.5&ndash;1.5&nbsp;s of each 2-second window) lowers accuracy the most. ',
+                    l2s:'<b>Unseen subjects:</b> accuracy falls to 19.1%, still nearly 3&times; chance. The left-hemisphere advantage remains (19.3% vs 16.4%). The time-window dip is weak.'}},
+    act_vid:{chance:7.69, all:{All:72.14,Left:64.59,Right:52.97,Front:64.16,Back:56.24,t:[62.70,49.44,49.78,64.96]},
+                          l2s:{All:24.09,Left:24.19,Right:17.65,Front:17.77,Back:18.57,t:[16.68,20.46,17.34,21.65]},
+              note:{all:'<b>Same pattern as SEED:</b> left over right (64.6% vs 53.0%), front over back (64.2% vs 56.2%), and a drop when timesteps 100&ndash;300 are masked.',
+                    l2s:'<b>Unseen subjects:</b> accuracy falls to 24.1%. Left still beats right (24.2% vs 17.7%), but front no longer beats back, and masking timesteps 100&ndash;300 causes no drop.'}},
+    seed_emo:{chance:33.33, all:{All:76.33,Left:49.54,Right:68.16,Front:67.75,Back:62.36,t:[67.27,65.23,64.53,72.06]},
+                            l2s:{All:54.80,Left:52.86,Right:57.07,Front:48.79,Back:50.79,t:[52.26,48.83,46.91,50.64]},
+              note:{all:'<b>The asymmetry flips for emotion:</b> right beats left (68.2% vs 49.5%). Front beats back (67.8% vs 62.4%). The temporal lobe alone reaches 70.9%.',
+                    l2s:'<b>Unseen subjects:</b> accuracy falls to 54.8%. Right still beats left (57.1% vs 52.9%). Front no longer beats back (48.8% vs 50.8%).'}}
+  };
+  let exK='seed_vid', exR='all';
+  const exBars=document.getElementById('exBars'), exNote=document.getElementById('exNote');
+  function row(name,val,chance,alt){
+    return `<div class="brow"><span class="nm">${name}</span><div class="track"><div class="fill${alt?' alt':''}" style="width:0" data-w="${val}"></div><div class="chance" style="left:${chance}%"></div></div><span class="v">${val.toFixed(1)}%</span></div>`;
+  }
+  function renderEx(){
+    const d=EX[exK], v=d[exR]; let h='';
+    h+=`<div class="grp">Channels used</div>`;
+    h+=row('All channels',v.All,d.chance);
+    h+=row('Left',v.Left,d.chance); h+=row('Right',v.Right,d.chance);
+    h+=row('Front',v.Front,d.chance); h+=row('Back',v.Back,d.chance);
+    h+=`<div class="grp">Masked at inference (timesteps)</div>`;
+    ['0&ndash;100','100&ndash;200','200&ndash;300','300&ndash;400'].forEach((n,i)=>h+=row(n,v.t[i],d.chance,true));
+    exBars.innerHTML=h; exNote.innerHTML=d.note[exR];
+    requestAnimationFrame(()=>exBars.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
+  }
+  document.querySelectorAll('#exTask .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#exTask .tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');exK=b.dataset.k;renderEx();});
+  document.querySelectorAll('#exReg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#exReg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');exR=b.dataset.r;renderEx();});
+  renderEx();
+
+  // ---------- figure tabs ----------
+  const FIG=[
+    {src:'images/eegvideo_tripletloss.png',cap:'<b>Effect of triplet loss</b> (EEG-Video Action, t-SNE). A randomly initialized encoder clusters strongly by subject (a, 19 subjects) but not by video (b, 13 videos). After triplet training on video labels, the pattern reverses: features cluster by video (c, about 70% k-means accuracy) while subject clusters collapse (d).'},
+    {src:'images/eegvideo_emotionvideoalign.png',cap:'<b>Visual and emotional features</b> (SEED, t-SNE). Trained on video labels, features cluster by video, and videos with the same emotion lie close together (a&ndash;b). Each video has a single emotion label, so this is not implied by the video clusters alone. Trained on emotion labels, features cluster by emotion but no longer separate videos (c&ndash;d).'},
+    {src:'images/eegvideo_seed_brainregion.png',cap:'<b>Brain lobes</b> (SEED). Accuracy when training and testing on channels from one lobe. The temporal lobe is the most informative for both video and emotion. For emotion, frontal, parietal and occipital lobes perform similarly (40.6&ndash;41.6%) against 70.9% for temporal.'},
+    {src:'images/eegvideo_action_brainregion.png',cap:'<b>Video decoding by region</b> (EEG-Video Action). Region-wise and time-masked accuracy under both regimes.'},
+    {src:'images/seeddv_topoanalysis_page-0001.jpg',cap:'<b>SEED-DV</b> (subject 1, linear probing). Accuracies stay close to the 2.5% chance level, but the regional trends match SEED: front beats back, and Q2 is best. SEED-DV is used only as an analysis benchmark.'}
+  ];
+  const figImg=document.getElementById('figImg'), figCap=document.getElementById('figCap');
+  function setFig(i){figImg.style.opacity=0;setTimeout(()=>{figImg.src=FIG[i].src;figImg.alt=FIG[i].cap.replace(/<[^>]+>/g,'');figImg.dataset.cap=figImg.alt;figCap.innerHTML=FIG[i].cap;figImg.style.opacity=1;},150);}
+  figImg.style.transition='opacity .15s';
+  document.querySelectorAll('#figTabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#figTabs .tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');setFig(+b.dataset.f);});
+  setFig(0);
+
+  // ---------- diagnostics ----------
+  document.querySelectorAll('.dcard').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('.dcard').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+    document.querySelectorAll('.dpane').forEach(p=>p.classList.toggle('on',p.id===c.dataset.p));
+    if(c.dataset.p==='d1') renderHo();
+  });
+  const HO={splits:['Videos 0,1,2','Videos 3,4,5','Videos 6,7,8','Videos 9&ndash;12'],
+    km:{t:[41.5,39.0,42.5,28.7],r:[35.9,36.5,35.8,27.4]},
+    ap:{t:[58.4,53.9,54.7,43.8],r:[37.1,36.1,38.6,27.7]},
+    cs:{t:[35.7,35.0,38.7,26.7],r:[35.6,33.2,35.6,26.0]},
+    note:{km:'<b>Consistent across splits.</b> All 20 trained-encoder seeds beat all 20 random-encoder seeds in every split. Chance is 33.3% for three held-out videos and 25% for four.',
+          ap:'<b>+16 to +21 points</b> over a random encoder on all four splits.',
+          cs:'<b>Separating subject from stimulus.</b> 65&ndash;72% of correct all-pairs matches come from the same subject. Restricted to different subjects, the gain is 1.4 points on average (up to 3.1), pointing to cross-subject alignment as the main lever for future encoders.'}};
+  let hoM='km';
+  const hoChart=document.getElementById('hoChart'), hoX=document.getElementById('hoX'), hoNote=document.getElementById('hoNote');
+  function renderHo(){
+    const d=HO[hoM], max=70;
+    hoChart.innerHTML=d.t.map((t,i)=>`<div class="gcol"><div class="gbar" style="height:0" data-h="${t/max*100}"><span>${t.toFixed(1)}</span></div><div class="gbar r" style="height:0" data-h="${d.r[i]/max*100}"><span class="muted">${d.r[i].toFixed(1)}</span></div></div>`).join('');
+    hoX.innerHTML=HO.splits.map((s,i)=>`<div>${s}<span class="gap-tag">+${(d.t[i]-d.r[i]).toFixed(1)}</span></div>`).join('');
+    hoNote.innerHTML=HO.note[hoM];
+    requestAnimationFrame(()=>requestAnimationFrame(()=>hoChart.querySelectorAll('.gbar').forEach(b=>b.style.height=b.dataset.h+'%')));
+  }
+  document.querySelectorAll('#hoMetric button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#hoMetric button').forEach(x=>x.classList.remove('on'));b.classList.add('on');hoM=b.dataset.m;renderHo();});
+  renderHo();
+
+  // ---------- lightbox ----------
+  const lb=document.getElementById('lb'), lbImg=document.getElementById('lbImg'), lbCap=document.getElementById('lbCap');
+  document.addEventListener('click',e=>{
+    const t=e.target;
+    if(t.tagName==='IMG' && (t.classList.contains('zoomable') || t.closest('.pair:not(.overlay)'))){
+      lbImg.src=t.src; lbCap.textContent=t.dataset.cap||t.alt||''; lb.classList.add('on');
+    }
+  });
+  lb.onclick=()=>lb.classList.remove('on');
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+
+  // ---------- reveal + nav highlight ----------
+  const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.08});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  const links=[...document.querySelectorAll('nav a.nl')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  const so=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+x.target.id));}}),{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(s=>s&&so.observe(s));
+})();
+</script>
+</body>
+</html>

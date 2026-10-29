@@ -1,0 +1,9 @@
+./script/16.run_train_lobes_frontal_left.sh
+./script/17.run_train_lobes_frontal_right.sh 
+./script/18.run_train_lobes_parietal_left.sh 
+./script/19.run_train_lobes_parietal_right.sh 
+./script/20.run_train_lobes_occipital_left.sh
+./script/21.run_train_lobes_occipital_right.sh
+./script/24.run_train_lobes_frontal.sh 
+./script/25.run_train_lobes_parietal.sh 
+./script/26.run_train_lobes_occipital.sh 

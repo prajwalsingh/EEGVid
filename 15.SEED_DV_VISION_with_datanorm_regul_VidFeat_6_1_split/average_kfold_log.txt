@@ -1,0 +1,1 @@
+Sub: sub1, Average k-fold accuracy: 0.2914285714285714, with data_aug: ['timerev', 'timemask']

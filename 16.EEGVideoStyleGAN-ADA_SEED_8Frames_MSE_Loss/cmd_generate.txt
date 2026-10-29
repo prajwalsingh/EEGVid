@@ -1,0 +1,1 @@
+python generate.py --network out/00001-seed_video_eeg-cond-cifar-ada-bgcfnc/network-snapshot-001080.pkl --outdir generated_videos/ --seeds 0 --data='../dataset/SEED/data/eeg_video_dataset_random_split_v2_tokens_eegfeat/repeat_*/test'

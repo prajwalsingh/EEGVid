@@ -1,0 +1,12 @@
+python 5.tsne_eeg2feat.py --test_path "../../../../dataset/SEED/data/eeg_video_dataset_random_split_v2_tokens/repeat_*/test/" \
+    --exp_type all \
+    --ckpt_path "EXPERIMENT_EEG2FeatAbl_all_1/bestckpt/eegfeat_all_0.7100653594771242.pth" \
+    --save_path "EXPERIMENT_EEG2FeatAbl_all_1/tsne_plot/" \
+    --vid_labels 15 \
+    --emot_labels 3 \
+    --eeg_timesteps 400 \
+    --batch_size 256 \
+    --feat_dims 1024 \
+    --epochs 300 \
+    --val_freq 1 \
+    --num_workers 8

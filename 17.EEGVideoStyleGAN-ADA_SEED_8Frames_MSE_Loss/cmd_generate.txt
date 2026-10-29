@@ -1,0 +1,1 @@
+python generate.py --network out/00000-action_video_eeg-cond-cifar-ada-bgcfnc/network-snapshot-001280.pkl --outdir generated_videos/ --seeds 0 --data='../dataset/Preprocessed_SingleShot/segment_notch_50Hz_bandpassfilter_0_5_NoneHz_len_2s_overlap_0s_downsampling_200_featvec/eeg/test'

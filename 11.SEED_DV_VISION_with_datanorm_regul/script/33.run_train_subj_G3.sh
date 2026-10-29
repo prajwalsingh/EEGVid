@@ -1,0 +1,17 @@
+subjects=("sub6" "sub7" "sub8" "sub9" "sub10")  # Add more subjects as needed
+
+for subject in "${subjects[@]}"; do
+    echo "Running for subject: $subject"
+
+    python 1.eeg2feat.py --eeg_path "../../../../dataset/SEED-DV/EEG/" \
+        --exp_type all \
+        --subject "$subject" \
+        --data_aug 'timerev' 'timemask'\
+        --eeg_timesteps 400 \
+        --num_classes 40 \
+        --batch_size 256 \
+        --feat_dims 1024 \
+        --epochs 300 \
+        --val_freq 1 \
+        --num_workers 8
+done

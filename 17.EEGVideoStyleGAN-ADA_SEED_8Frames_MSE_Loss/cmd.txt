@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python train.py --outdir=./out/ --data='../dataset/Preprocessed_SingleShot/segment_notch_50Hz_bandpassfilter_0_5_NoneHz_len_2s_overlap_0s_downsampling_200_featvec/eeg/train' --cond=1 --gpus=1 --cfg=cifar --augpipe=bgcfnc --aug=ada
