@@ -1,1 +1,0 @@
-Exp Type: leftrightear_center, Sub: sub1, Average k-fold accuracy: 0.295, with data_aug: ['timerev', 'timemask']

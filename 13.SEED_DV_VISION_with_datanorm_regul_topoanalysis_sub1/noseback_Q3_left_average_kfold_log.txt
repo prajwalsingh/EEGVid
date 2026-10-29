@@ -1,1 +1,0 @@
-Exp Type: noseback_Q3_left, Sub: sub1, Average k-fold accuracy: 0.2857142857142857, with data_aug: ['timerev', 'timemask']

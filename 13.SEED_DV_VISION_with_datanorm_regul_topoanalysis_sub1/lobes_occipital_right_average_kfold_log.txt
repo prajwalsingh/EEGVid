@@ -1,1 +1,0 @@
-Exp Type: lobes_occipital_right, Sub: sub1, Average k-fold accuracy: 0.2778571428571429, with data_aug: ['timerev', 'timemask']

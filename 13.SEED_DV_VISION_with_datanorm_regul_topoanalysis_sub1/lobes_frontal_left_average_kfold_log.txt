@@ -1,1 +1,0 @@
-Exp Type: lobes_frontal_left, Sub: sub1, Average k-fold accuracy: 0.28357142857142853, with data_aug: ['timerev', 'timemask']

@@ -1,1 +1,0 @@
-Exp Type: lobes_parietal_left, Sub: sub1, Average k-fold accuracy: 0.2792857142857143, with data_aug: ['timerev', 'timemask']
