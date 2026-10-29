@@ -1,5 +1,7 @@
 # Beyond Reconstruction: What EEG-to-Video Decoding Actually Recovers
 
+[[Paper](https://www.alphaxiv.org/abs/2505.21385)] [[Project Page](https://prajwalsingh.github.io/EEGVid/)]
+
 ![Result Collage](images/teaser_result_page-0001.jpg)
 
 **Generated video frames from EEG.** Ground-truth and generated frames for clips shown to participants in SEED [1,2], EEG-Video Action [4] and SEED-DV [8]. Each clip has eight frames (8 fps). The EEG provides semantic guidance, and the dataset-specific GAN prior provides fine spatial detail.
