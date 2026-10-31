@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Beyond Reconstruction: What EEG-to-Video Decoding Actually Recovers</title>
-<meta name="description" content="EEGVid: EEG-conditioned video generation with controlled diagnostics that separate stimulus-level information from trial-specific decoding.">
+<meta name="description" content="EEGVid: EEG-conditioned video generation with controlled diagnostics that separate stimulus-level information from segment-specific decoding.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -255,7 +255,7 @@
     <div class="kgrid">
       <div class="kcard reveal"><div class="knum a">72.1%</div><div class="klab">13-way video decoding</div><div class="kdesc">EEG-Video Action, all subjects (chance 7.7%).</div></div>
       <div class="kcard reveal"><div class="knum g">82.3%</div><div class="klab">Follows swapped EEG</div><div class="kdesc">Outputs shift to the donor's class when EEG is swapped.</div></div>
-      <div class="kcard reveal"><div class="knum a">4 / 4</div><div class="klab">Above chance on unseen videos</div><div class="kdesc">All four held-out splits, every seed, over a random encoder (k-means).</div></div>
+      <div class="kcard reveal"><div class="knum a">4 / 4</div><div class="klab">Better than a random encoder on unseen videos</div><div class="kdesc">All four held-out splits (k-means gap 1.3 to 6.7 points); the cross-subject gain is small.</div></div>
       <div class="kcard reveal"><div class="knum w" style="font-size:1.6rem">0.62 vs 0.43</div><div class="klab">Class-label reference</div><div class="kdesc">SSIM of a one-hot label generator vs. the EEG generator.</div></div>
     </div>
   </div>
@@ -264,25 +264,25 @@
 <section id="abstract">
   <div class="wrap reveal">
     <h2>Abstract</h2>
-    <div class="tldr">TL;DR &mdash; Reconstruction scores alone cannot separate trial-specific decoding from a strong generative prior. Our diagnostics show that EEG drives the stimulus-level content of the generated video.</div>
-    <p class="abstract">Reconstructing <em>dynamic visual stimuli</em> from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder separates unseen video classes better than a randomly initialized encoder, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, although follow-up experiments show that it also provides a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, trial-specific decoding.</p>
+    <div class="tldr">TL;DR &mdash; Reconstruction scores alone cannot separate segment-specific decoding from a strong generative prior. Our diagnostics show that EEG drives the stimulus-level content of the generated video.</div>
+    <p class="abstract">Reconstructing <em>dynamic visual stimuli</em> from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder separates unseen video classes better than a randomly initialized encoder, although the cross-subject gain is small, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, partly because the label is a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, segment-specific decoding.</p>
 
     <h3 style="margin-top:34px;margin-bottom:14px">Research questions</h3>
     <details class="rq" open>
       <summary><span class="rqtag">RQ1</span>How are visual and emotional features related?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
-      <div class="body">In the SEED dataset, emotions are induced through video content. We test whether visual features also carry affective information. Our results show that emotional information is largely content-driven, with visual representations retaining enough affective structure for clustering.</div>
+      <div class="body">In the SEED dataset, emotions are induced through video content. We test whether visual features also carry affective information. Our results show that emotional information is largely content-driven, with visual representations showing visible affective structure in t-SNE.</div>
     </details>
     <details class="rq">
-      <summary><span class="rqtag">RQ2</span>Do visual or emotional features retain subject-specific information?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <summary><span class="rqtag">RQ2</span>Do learned visual features retain subject-specific information?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
       <div class="body">While untrained features cluster by subject, learned features emphasize stimulus information and reduce subject-related bias.</div>
     </details>
     <details class="rq">
       <summary><span class="rqtag">RQ3</span>How do different brain regions contribute to encoding?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
-      <div class="body">We find that the temporal lobe is the most informative across tasks, the left hemisphere dominates for video classification and the right hemisphere for emotion, and, when training and test subjects overlap, frontal channels outperform posterior channels in both tasks.</div>
+      <div class="body">We find that the temporal lobe, with only six channels, gives the highest accuracy in five of the six SEED and EEG-Video Action settings, the left hemisphere dominates for video classification and the right hemisphere for emotion, and, when training and test subjects overlap, frontal channels outperform posterior channels in both tasks.</div>
     </details>
     <details class="rq">
-      <summary><span class="rqtag">RQ4</span>Can dynamic videos be reconstructed from EEG, and how much of this reconstruction reflects genuine trial-specific decoding?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
-      <div class="body">By conditioning a GAN on EEG features and temporal indices, we show that generated frames align semantically with the videos participants observed. We then introduce three controlled diagnostics: a held-out-stimulus generalization test for the encoder, a mismatched-conditioning control for the generator, and a class-conditional baseline that compares EEG with a ground-truth label. These tests determine how much of the observed alignment survives rigorous evaluation and reveal where the pipeline's apparent success is limited.</div>
+      <summary><span class="rqtag">RQ4</span>Can dynamic videos be reconstructed from EEG, and how much of this reconstruction reflects genuine segment-specific decoding?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="body">By conditioning a GAN on EEG features and temporal indices, we show that generated frames align semantically with the videos participants observed. We then introduce three controlled diagnostics, i.e., a held-out-stimulus generalization test for the encoder, a mismatched-conditioning control for the generator, and a class-conditional baseline that compares EEG with a ground-truth label. These tests identify which aspects of the reconstruction the EEG drives.</div>
     </details>
   </div>
 </section>
@@ -381,7 +381,7 @@
 <section id="diagnostics">
   <div class="wrap reveal">
     <h2>Controlled diagnostics</h2>
-    <p class="sub">Reconstruction scores alone cannot separate trial-specific decoding from a strong generative prior. One sanity check and three controls on EEG-Video Action show what the generator takes from the EEG.</p>
+    <p class="sub">Reconstruction scores alone cannot separate segment-specific decoding from a strong generative prior. One sanity check and three controls on EEG-Video Action show what the generator takes from the EEG.</p>
 
     <div class="two" style="margin-bottom:22px;align-items:center">
       <figure class="card" id="randFig">
@@ -595,7 +595,7 @@
     {src:'images/eegvideo_emotionvideoalign.png',cap:'<b>Visual and emotional features</b> (SEED, t-SNE). Trained on video labels, features cluster by video, and videos with the same emotion lie close together (a&ndash;b). Each video has a single emotion label, so this is not implied by the video clusters alone. Trained on emotion labels, features cluster by emotion but no longer separate videos (c&ndash;d).'},
     {src:'images/eegvideo_seed_brainregion.png',cap:'<b>Brain lobes</b> (SEED). Accuracy when training and testing on channels from one lobe. The temporal lobe is the most informative for both video and emotion. For emotion, frontal, parietal and occipital lobes perform similarly (40.6&ndash;41.6%) against 70.9% for temporal.'},
     {src:'images/eegvideo_action_brainregion.png',cap:'<b>Video decoding by region</b> (EEG-Video Action). Region-wise and time-masked accuracy under both regimes.'},
-    {src:'images/seeddv_topoanalysis_page-0001.jpg',cap:'<b>SEED-DV</b> (subject 1, linear probing). Accuracies stay close to the 2.5% chance level, so regional differences are small: front scores above back (3.49% vs 2.71%) and Q2 is the best quadrant (3.71%), as on SEED. SEED-DV is used only as an analysis benchmark.'}
+    {src:'images/seeddv_topoanalysis_page-0001.jpg',cap:'<b>SEED-DV</b> (subject 1, linear probing). All accuracies are at the 2.5% chance level, and masking some windows even raises accuracy above the unmasked 3.71%, so there are no clear regional differences on SEED-DV. SEED-DV is used only as an analysis benchmark.'}
   ];
   const figImg=document.getElementById('figImg'), figCap=document.getElementById('figCap');
   function setFig(i){figImg.style.opacity=0;setTimeout(()=>{figImg.src=FIG[i].src;figImg.alt=FIG[i].cap.replace(/<[^>]+>/g,'');figImg.dataset.cap=figImg.alt;figCap.innerHTML=FIG[i].cap;figImg.style.opacity=1;},150);}
