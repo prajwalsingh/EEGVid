@@ -1,10 +1,10 @@
 # Beyond Reconstruction: What EEG-to-Video Decoding Actually Recovers
 
-[[Paper](https://www.alphaxiv.org/abs/2505.21385)] [[Project Page](https://prajwalsingh.github.io/EEGVid/)]
+[[Paper]](https://arxiv.org/abs/2505.21385) [[Project Page]](https://prajwalsingh.github.io/EEGVid/) [[Code]](https://github.com/prajwalsingh/EEGVid)
 
 ![Result Collage](images/teaser_result_page-0001.jpg)
 
-**Generated video frames from EEG.** Ground-truth and generated frames for clips shown to participants in SEED [1,2], EEG-Video Action [4] and SEED-DV [8]. Each clip has eight frames (8 fps). The EEG provides semantic guidance, and the dataset-specific GAN prior provides fine spatial detail.
+**Generated video frames from EEG.** Ground-truth and generated frames for clips shown to participants in SEED [1,2], EEG-Video Action [4] and SEED-DV [8]. Each clip has eight frames. The EEG provides semantic guidance, and the dataset-specific GAN prior provides fine spatial detail.
 
 > **TL;DR.** Reconstruction scores alone cannot separate trial-specific decoding from a strong generative prior. Our controlled diagnostics show that EEG drives the stimulus-level content of the generated video, and provide a protocol for evaluating any EEG-to-video model.
 
@@ -12,7 +12,7 @@
 
 ## Abstract
 
-Reconstructing *dynamic visual stimuli* from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder generalizes above chance to unseen video classes, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, although follow-up experiments show that it also provides a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, trial-specific decoding.
+Reconstructing *dynamic visual stimuli* from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder separates unseen video classes better than a randomly initialized encoder, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, although follow-up experiments show that it also provides a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, trial-specific decoding.
 
 ---
 
@@ -94,7 +94,7 @@ Region-wise and time-masked video classification on EEG-Video Action.
 
 ![SEED-DV Brain Region](images/seeddv_topoanalysis_page-0001.jpg)
 
-SEED-DV, subject 1, linear probing. The regional trends match SEED: front beats back, and Q2 is best.
+SEED-DV, subject 1, linear probing. Accuracies stay close to the 2.5% chance level, so regional differences are small: front scores above back (3.49% vs 2.71%) and Q2 is the best quadrant (3.71%), as on SEED.
 
 ---
 
@@ -113,7 +113,7 @@ All diagnostics use EEG-Video Action.
 | 6, 7, 8 | 42.5 / 35.8 | 54.7 / 38.6 | 38.7 / 35.6 | 65.3% |
 | 9, 10, 11, 12 | 28.7 / 27.4 | 43.8 / 27.7 | 26.7 / 26.0 | 67.5% |
 
-Every trained-encoder seed beats every random-encoder seed on all four splits, and all-pairs retrieval gains 16–21 points. Restricting matches to different subjects separates stimulus from subject information: 65–72% of correct matches share the query's subject, and the cross-subject gain is 1.4 points on average (up to 3.1), pointing to cross-subject alignment as the main lever for future encoders.
+The trained encoder beats the random encoder on every split in k-means accuracy (by 1.3 to 6.7 points, smallest on split 9, 10, 11, 12), and all-pairs retrieval gains 16–21 points. Restricting matches to different subjects separates stimulus from subject information: 65–72% of correct matches share the query's subject, and the cross-subject gain is 1.4 points on average (from 0.1 to 3.1 across splits), pointing to cross-subject alignment as the main lever for future encoders.
 
 **2. Mismatched-conditioning control.** Each test segment's conditioning is replaced with that of a different (donor) trial at the same frame position. We then assign each output to its nearest CLIP class prototype (NPV).
 

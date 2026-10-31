@@ -242,8 +242,8 @@
     <p class="lede">We generate short videos from EEG alone and introduce controlled diagnostics that reveal what EEG-conditioned generation recovers: stimulus-level information that the generator uses as a content selector.</p>
     <!-- <p class="authors">Author One<sup>1</sup>, Author Two<sup>1</sup>, Author Three<sup>1</sup> &middot; <sup>1</sup>Affiliation</p> -->
     <div class="btns">
-      <a class="btn primary" href="https://www.alphaxiv.org/abs/2505.21385" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper</a>
-      <a class="btn" href="https://github.com/prajwalsingh/EEGVid" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>Code</a>
+      <a class="btn primary" href="https://www.alphaxiv.org/abs/2505.21385" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper</a>
+      <a class="btn" href="https://github.com/prajwalsingh/EEGVid" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>Code</a>
       <a class="btn" href="#data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>Data</a>
     </div>
 
@@ -265,7 +265,7 @@
   <div class="wrap reveal">
     <h2>Abstract</h2>
     <div class="tldr">TL;DR &mdash; Reconstruction scores alone cannot separate trial-specific decoding from a strong generative prior. Our diagnostics show that EEG drives the stimulus-level content of the generated video.</div>
-    <p class="abstract">Reconstructing <em>dynamic visual stimuli</em> from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder generalizes above chance to unseen video classes, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, although follow-up experiments show that it also provides a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, trial-specific decoding.</p>
+    <p class="abstract">Reconstructing <em>dynamic visual stimuli</em> from EEG recordings is challenging due to the noisy, non-stationary nature of EEG signals and the limited availability of EEG-video datasets. We present EEGVid, a framework that learns EEG representations using triplet loss and reconstructs dynamic videos with a temporally conditioned GAN. We study what these representations encode and how this information supports generation. First, visual representations retain emotional structure, while emotion-based supervision does not preserve the same fine-grained visual information. Second, triplet learning shifts EEG features away from subject-specific structure toward stimulus-related information. Third, analysis across brain regions, hemispheres, and time reveals consistent differences in visual and emotional encoding, with temporal regions contributing strongly across tasks. Finally, we evaluate video generation using three controlled diagnostics. The learned encoder separates unseen video classes better than a randomly initialized encoder, while mismatched EEG conditioning shifts generated content toward the substituted stimulus, showing that the generator actively uses EEG as a content signal. A ground-truth class label yields stronger reconstruction metrics, although follow-up experiments show that it also provides a cleaner conditioning target. Together, these results show that EEG exhibits a consistent visual and emotional structure that can support dynamic video generation, whereas current reconstruction primarily reflects coarse stimulus-level information rather than fine-grained, trial-specific decoding.</p>
 
     <h3 style="margin-top:34px;margin-bottom:14px">Research questions</h3>
     <details class="rq" open>
@@ -396,7 +396,7 @@
     </div>
 
     <div class="dgrid">
-      <button class="dcard on" data-p="d1"><div class="dnum">Control 1</div><div class="dq">Does the encoder generalize to unseen videos?</div><div class="dv">Yes, above chance on all four held-out splits.</div></button>
+      <button class="dcard on" data-p="d1"><div class="dnum">Control 1</div><div class="dq">Does the encoder generalize to unseen videos?</div><div class="dv">Yes, it beats a random encoder on all four held-out splits.</div></button>
       <button class="dcard" data-p="d2"><div class="dnum">Control 2</div><div class="dq">Does the generator follow the EEG?</div><div class="dv">Yes. Swapped EEG moves output to the donor's class.</div></button>
       <button class="dcard" data-p="d3"><div class="dnum">Control 3</div><div class="dq">How does EEG compare to a class label?</div><div class="dv">The label sets a class-level reference for EEG.</div></button>
     </div>
@@ -595,7 +595,7 @@
     {src:'images/eegvideo_emotionvideoalign.png',cap:'<b>Visual and emotional features</b> (SEED, t-SNE). Trained on video labels, features cluster by video, and videos with the same emotion lie close together (a&ndash;b). Each video has a single emotion label, so this is not implied by the video clusters alone. Trained on emotion labels, features cluster by emotion but no longer separate videos (c&ndash;d).'},
     {src:'images/eegvideo_seed_brainregion.png',cap:'<b>Brain lobes</b> (SEED). Accuracy when training and testing on channels from one lobe. The temporal lobe is the most informative for both video and emotion. For emotion, frontal, parietal and occipital lobes perform similarly (40.6&ndash;41.6%) against 70.9% for temporal.'},
     {src:'images/eegvideo_action_brainregion.png',cap:'<b>Video decoding by region</b> (EEG-Video Action). Region-wise and time-masked accuracy under both regimes.'},
-    {src:'images/seeddv_topoanalysis_page-0001.jpg',cap:'<b>SEED-DV</b> (subject 1, linear probing). Accuracies stay close to the 2.5% chance level, but the regional trends match SEED: front beats back, and Q2 is best. SEED-DV is used only as an analysis benchmark.'}
+    {src:'images/seeddv_topoanalysis_page-0001.jpg',cap:'<b>SEED-DV</b> (subject 1, linear probing). Accuracies stay close to the 2.5% chance level, so regional differences are small: front scores above back (3.49% vs 2.71%) and Q2 is the best quadrant (3.71%), as on SEED. SEED-DV is used only as an analysis benchmark.'}
   ];
   const figImg=document.getElementById('figImg'), figCap=document.getElementById('figCap');
   function setFig(i){figImg.style.opacity=0;setTimeout(()=>{figImg.src=FIG[i].src;figImg.alt=FIG[i].cap.replace(/<[^>]+>/g,'');figImg.dataset.cap=figImg.alt;figCap.innerHTML=FIG[i].cap;figImg.style.opacity=1;},150);}
@@ -613,9 +613,9 @@
     km:{t:[41.5,39.0,42.5,28.7],r:[35.9,36.5,35.8,27.4]},
     ap:{t:[58.4,53.9,54.7,43.8],r:[37.1,36.1,38.6,27.7]},
     cs:{t:[35.7,35.0,38.7,26.7],r:[35.6,33.2,35.6,26.0]},
-    note:{km:'<b>Consistent across splits.</b> All 20 trained-encoder seeds beat all 20 random-encoder seeds in every split. Chance is 33.3% for three held-out videos and 25% for four.',
+    note:{km:'<b>Consistent across splits.</b> The trained encoder beats the random encoder on every split, by 1.3 to 6.7 points (smallest on split 9 to 12). Chance is 33.3% for three held-out videos and 25% for four.',
           ap:'<b>+16 to +21 points</b> over a random encoder on all four splits.',
-          cs:'<b>Separating subject from stimulus.</b> 65&ndash;72% of correct all-pairs matches come from the same subject. Restricted to different subjects, the gain is 1.4 points on average (up to 3.1), pointing to cross-subject alignment as the main lever for future encoders.'}};
+          cs:'<b>Separating subject from stimulus.</b> 65&ndash;72% of correct all-pairs matches come from the same subject. Restricted to different subjects, the gain is 1.4 points on average (from 0.1 to 3.1 across splits), pointing to cross-subject alignment as the main lever for future encoders.'}};
   let hoM='km';
   const hoChart=document.getElementById('hoChart'), hoX=document.getElementById('hoX'), hoNote=document.getElementById('hoNote');
   function renderHo(){
